@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <link href="/favicon.ico" type="image/x-icon" rel="icon" />
+
+    <title>Graph GUI</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+</head>
+
+<body>
+    <h1>Chart</h1>
+
+    <div class="chart">
+
+    </div>
+</body>
+<script type="text/javascript">
+    var slopesXY = [{
+        time: Number,
+        slopeattimeT: Number
+    }];
+
+    var slope = function(x1, x2, y1, y2) {
+        return ((y2 - y1) / (x2 - x1));
+    }
+
+    var margin = {
+            top: 30,
+            right: 20,
+            bottom: 30,
+            left: 50
+        },
+        width = 600 - margin.left - margin.right,
+        height = 270 - margin.top - margin.bottom;
+
+    var x = d3.scaleLinear().range([0, width]);
+    var y = d3.scaleLinear().range([height, 0]);
+
+    var line = d3.line()
+        .x(function(d, i) {
+            return xScale(i);
+        })
+        .y(function(d) {
+            return yScale(d.y);
+        })
+        .curve(d3.curveMonotomeX)
+
+    var svg = d3.select("body").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+    d3.csv('./data/sample.csv').then(function(data) {
+        for (var i = 0; i < data.length; i++) {
+            //console.log(data[i].x, data[i].y, data[i].z);
+            if (i == data.length - 1) {
+                break;
+            } else {
+                console.log(data[i].x, data[i + 1].x, data[i].y, data[i + 1].y);
+                slopesXY.push({
+                    time: i,
+                    slopeattimeT: slope(data[i].x, data[i + 1].x, data[i].y, data[i + 1].y)
+                });
+            }
+        }
+
+        // Scale the range of the data
+        var xScale = d3.scaleLinear().domain([0, data.length]).range([0, width]);
+
+        var yScale = d3.scaleLinear().domain([0, 1]).range([height, 0]);
+
+        // Add the valueline path.
+        svg.append("path")
+            .attr("class", "line")
+            .attr("d", valueline(data));
+
+        // Add the X Axis
+        svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(xAxis);
+
+        // Add the Y Axis
+        svg.append("g")
+            .attr("class", "y axis")
+            .call(yAxis);
+        //console.log(slopes);
+        //console.log(data);
+    });
+</script>
+
+</html>
